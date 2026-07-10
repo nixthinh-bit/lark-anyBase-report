@@ -54,7 +54,8 @@ Ask the user for the **Base link** (or `base_token`). Resolve the token from the
 (`.../base/<base_token>?table=<table_id>&view=<view_id>` — the `base` segment is the token). Then:
 ```bash
 BASE="<base_token>"
-lark-cli base +table-list --base-token "$BASE" --format json --jq '.data.tables[] | {table_id, name}'
+lark-cli base +table-list --base-token "$BASE" --format json \
+  --jq '.data.tables[] | {id: (.id // .table_id), name}'   # id key is .id on current CLI
 ```
 Show the table list. If there are several, ask which table(s) are in scope — or infer the obvious
 main one and confirm. Capture each `table_id` you'll use.
@@ -78,7 +79,7 @@ one or two lines and let the user correct it.
 For each in-scope table:
 ```bash
 lark-cli base +field-list --base-token "$BASE" --table-id "$TID" --format json \
-  --jq '.data.items[] | {name, type, ui_type}'
+  --jq '(.data.fields // .data.items)[] | {name, type, ui_type}'   # fields live under .data.fields
 ```
 Classify fields by type (number/currency, select, datetime, checkbox, link, formula, lookup, user,
 text). Then build the **mapping table** — for each thing the user asked for, name the exact field
@@ -99,14 +100,18 @@ Read only the fields you mapped (keep payloads small), and apply the time window
 filter when the date field allows it:
 ```bash
 # projection + filter + pagination; loop offset until a page returns < limit
+# ⚠️ rows come back at .data.data as POSITIONAL arrays in --field-id order (map by index, not name)
+# ⚠️ datetime accepts only == > < empty non_empty — build a range with > (day before) and < (day after)
 lark-cli base +record-list --base-token "$BASE" --table-id "$TID" \
   --field-id "Thành tiền" --field-id "Khu vực" --field-id "Ngày chốt" --field-id "Trạng thái" \
-  --filter-json '{"logic":"and","conditions":[["Ngày chốt",">=","ExactDate(2026-04-01)"],["Ngày chốt","<=","ExactDate(2026-06-30)"]]}' \
-  --format json --limit 200 --offset 0 --jq '.data'
+  --filter-json '{"logic":"and","conditions":[["Ngày chốt",">","ExactDate(2026-03-31)"],["Ngày chốt","<","ExactDate(2026-07-01)"]]}' \
+  --format json --limit 200 --offset 0 --jq '.data.data'
 ```
 Paginate with `--offset` in steps of `--limit` (max **200**) until a page returns fewer rows than
-the limit. See `references/read-recipes.md` for the exact loop, filter shapes, and when a filter
-can't be pushed to the server (formula/lookup date, dynamic "last N days") — then filter in memory.
+the limit. **If a page is empty, suspect the JSON path (`.data.data`) before concluding "no data"** —
+a wrong path returns empty and silently poisons the report. See `references/read-recipes.md` for the
+exact loop, the positional-row parsing, the datetime operator rule, and when a filter can't be pushed
+to the server (formula/lookup date, dynamic "last N days") — then filter in memory.
 Compute the metrics the user asked for: totals, averages, counts, rates, the segment breakdown,
 period-over-period deltas, and top/bottom outliers. Record the **row count actually scanned**.
 

@@ -36,8 +36,11 @@
   → field → type → ghi chú), báo field không ánh xạ được, lấy xác nhận. Xem `references/read-recipes.md`.
 - **B4 Quét dữ liệu (chỉ đọc, phân trang):** `+record-list` với `--field-id` (chỉ field cần),
   `--filter-json` cho khung thời gian, lặp `--offset` bước `--limit` (tối đa 200) đến khi trang trả
-  về ít hơn limit. Tính tổng/trung bình/tỉ lệ/chia nhóm/so kỳ/outlier. Ghi lại **số dòng đã quét**.
-  Base rất lớn → giới hạn quét, báo user, đề xuất lọc theo view.
+  về ít hơn limit. **2 bẫy (xem `references/read-recipes.md`):** (1) rows ở **`.data.data`** dạng
+  **mảng theo thứ tự `--field-id`** — map theo index, không theo tên; trang rỗng thì **nghi path
+  trước khi kết luận "không có dữ liệu"**. (2) field **datetime chỉ nhận `== > < empty non_empty`**
+  (không có `>=`/`<=`) — làm khoảng bằng `>` ngày-trước và `<` ngày-sau. Tính tổng/trung bình/tỉ lệ/
+  chia nhóm/so kỳ/outlier. Ghi lại **số dòng đã quét**. Base rất lớn → giới hạn quét, báo user.
 - **B5 Dựng báo cáo & TRÌNH BẢN NHÁP (chốt duyệt):** theo `references/report-template.md` — tóm tắt
   điều hành → metric chính → chia nhóm → điểm nổi bật → định hướng bước tiếp → lưu ý & độ phủ. In ra
   cho user duyệt trước khi xuất bản.
