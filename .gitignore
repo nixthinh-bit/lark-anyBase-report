@@ -1,0 +1,10 @@
+# scratch / generated reports
+*.tmp
+report*.md
+!references/report-template.md
+.DS_Store
+
+# never commit any Lark auth material
+*.token
+.lark-cli/
+auth*.json
