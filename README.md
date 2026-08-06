@@ -1,5 +1,22 @@
 # lark-anyBase-report
 
+## 🚀 Install — paste this one line into Claude Code
+
+**English:**
+```
+Install the lark-anybase-report skill from https://github.com/nixthinh-bit/lark-anyBase-report — clone it to ~/.claude/skills/lark-anybase-report, confirm SKILL.md exists, then remind me to restart the session. It's triggered with /lark-anybase-report.
+```
+
+**Tiếng Việt:**
+```
+Cài skill lark-anybase-report từ https://github.com/nixthinh-bit/lark-anyBase-report vào ~/.claude/skills/lark-anybase-report giúp mình, kiểm tra SKILL.md đã có chưa rồi nhắc mình khởi động lại phiên. Kích hoạt bằng /lark-anybase-report.
+```
+
+Restart the session after it's done, then run `/lark-anybase-report`. Requires `lark-cli` installed
+and authenticated (user identity) — see [Requirements](#requirements) below if you don't have it yet.
+
+---
+
 A Claude Code skill that turns **any Lark (Feishu) Base someone hands you** into a focused **insight
 report** — but interviews you first so it reports on what *you* actually care about, not a generic
 data dump.
@@ -41,8 +58,13 @@ computes — and every number in the output carries a "so what" plus a concrete 
 
 ## Install
 
-See [INSTALL.md](INSTALL.md). TL;DR: copy this folder to `~/.claude/skills/lark-anybase-report/`
-(or drop it in a plugin's `skills/`), then run `/lark-anybase-report` in Claude Code.
+Easiest: use the one-line Claude Code message at the top of this README. To run it yourself in a
+terminal instead:
+```bash
+git clone https://github.com/nixthinh-bit/lark-anyBase-report.git ~/.claude/skills/lark-anybase-report
+```
+Restart the Claude Code session, then run `/lark-anybase-report`. Full details (plugin install,
+verify script) in [INSTALL.md](INSTALL.md).
 
 ## Repo layout
 
