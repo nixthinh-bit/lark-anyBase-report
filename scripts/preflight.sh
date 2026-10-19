@@ -16,23 +16,33 @@ if [[ -z "$CLI" ]]; then
   echo "✗ lark-cli not found. Install it and run the lark-cli-setup skill first." >&2
   exit 1
 fi
-echo "• lark-cli: $CLI ($($CLI --version 2>/dev/null | head -1))"
+echo "• lark-cli: $CLI ($("$CLI" --version 2>/dev/null | head -1))"
 
 # --- auth status -------------------------------------------------------------
-STATUS_JSON="$("$CLI" auth status --format json 2>/dev/null || "$CLI" auth status 2>/dev/null || true)"
-if [[ -z "$STATUS_JSON" ]]; then
-  echo "✗ Could not read auth status. Run the lark-cli-setup skill to log in." >&2
-  exit 2
-fi
-
 token_status=""
 user_name=""
-if command -v jq >/dev/null 2>&1; then
-  token_status="$(printf '%s' "$STATUS_JSON" | jq -r '.identities.user.tokenStatus // empty' 2>/dev/null || true)"
-  user_name="$(printf '%s' "$STATUS_JSON" | jq -r '.identities.user.userName // empty' 2>/dev/null || true)"
-else
-  token_status="$(printf '%s' "$STATUS_JSON" | grep -o '"tokenStatus"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
-  user_name="$(printf '%s' "$STATUS_JSON" | grep -o '"userName"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+read_status() {
+  STATUS_JSON="$("$CLI" auth status --format json 2>/dev/null || "$CLI" auth status 2>/dev/null || true)"
+  if [[ -z "$STATUS_JSON" ]]; then
+    echo "✗ Could not read auth status. Run the lark-cli-setup skill to log in." >&2
+    exit 2
+  fi
+  if command -v jq >/dev/null 2>&1; then
+    token_status="$(printf '%s' "$STATUS_JSON" | jq -r '.identities.user.tokenStatus // empty' 2>/dev/null || true)"
+    user_name="$(printf '%s' "$STATUS_JSON" | jq -r '.identities.user.userName // empty' 2>/dev/null || true)"
+  else
+    token_status="$(printf '%s' "$STATUS_JSON" | grep -o '"tokenStatus"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+    user_name="$(printf '%s' "$STATUS_JSON" | grep -o '"userName"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+  fi
+}
+read_status
+
+# An expired access token is normal: any user call refreshes it from the stored
+# refresh_token without a browser. Try that once before asking for a re-login.
+if [[ "$token_status" == "needs_refresh" || "$token_status" == "expired" ]]; then
+  echo "• user token is '$token_status', trying a silent refresh…"
+  "$CLI" contact +get-user --as user >/dev/null 2>&1 || true
+  read_status
 fi
 
 if [[ "$token_status" == "valid" ]]; then
